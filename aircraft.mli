@@ -5,6 +5,7 @@ type t = {
   mutable speedopt : Geom.t;
   route : Geom.t list;
   mutable active : bool;
+  mutable level : int;
 }
 
 val update_speedopt : t -> Geom.t

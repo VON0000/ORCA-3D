@@ -12,6 +12,7 @@ type t = {
   mutable speedopt : Geom.t;
   route : Geom.t list;
   mutable active : bool;
+  mutable level : int;
 }
 
 let radius = 300. (* taille de la fenêtre *)
@@ -88,6 +89,7 @@ let create id (exist_acft : t list ref) =
       speedopt;
       route = [ position; dest ];
       active = true;
+      level = 0;
     }
   in
   acft
