@@ -205,8 +205,6 @@ let complete cadre =
       | fin :: _ -> if deb = fin then cadre else fin :: cadre)
 
 let cutting_border point normal_vector cadre =
-  (* Printf.printf "point normal %f %f %f %f %d \n" point.x point.y normal_vector.x
-     normal_vector.y (List.length cadre); *)
   let intersection_border_speed last_node node point normal_vector =
     intersection_point_of_two_line node
       (normal_vecteur_for_two_point_2d last_node node)
@@ -247,14 +245,4 @@ let cutting_border point normal_vector cadre =
   match cadre with
   | [] -> []
   | hd :: tl ->
-      (* Printf.printf "cadre:%d\n" (List.length cadre);
-
-         let nb = ref (List.length cadre) and i = ref 0 in
-         while !nb > 0 do
-           let temp = List.nth cadre !i in
-           Printf.printf "%f %f\n" temp.x temp.y;
-           nb := !nb - 1;
-           i := !i + 1
-         done;
-         Printf.printf "\n"; *)
       intersect point normal_vector tl (get_flag hd point normal_vector) hd []
