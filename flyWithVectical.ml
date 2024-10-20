@@ -1,12 +1,9 @@
 (* lib/fly2d.ml *)
 open Aircraft
-open Geom
-open Const
-open Plot
 
-let sizelong = 1. *. pas (*manoeuvrabilité longitudinale*)
+let sizelong = 1. *. Const.pas (*manoeuvrabilité longitudinale*)
 let fichmem = open_out "./results/memory"
-let is_stop dim fin = if fin < dim then true else false
+let is_stop (dim : int) (fin : int) = if fin < dim then true else false
 
 (*mesure de la distance totale*)
 let totdist = ref 0.
@@ -25,6 +22,8 @@ let move_all dim acfts flag_fin =
       Printf.fprintf fichmem "%f %f\n\n" acft.position.x acft.position.y;
       flush fichmem)
   done
+
+let pi = acos (-1.)
 
 (* 边界里为非扇形区域 此方程包含对边界外的处理 *)
 let get_smallest_change_to_edge_for_non_sectoral_area relative_speed
@@ -237,7 +236,7 @@ let speedbox speed =
   let box =
     Array.init (nb + 1) (fun i ->
         let na = angle +. (float i *. 2. *. pi /. float nb) in
-        { x = sizelong *. cos na; y = sizelong *. sin na })
+        Geom.create_t (sizelong *. cos na) (sizelong *. sin na))
   in
   Array.to_list box
 
@@ -282,49 +281,3 @@ let get_available_speed speed speedopt speedbox =
 
 let seed = truncate (Unix.time ())
 let _ = Random.init seed
-
-let () =
-  let flag_fin = ref 0 in
-  let time = ref 0 in
-  let step = 10 (*pas de temps affichage *) in
-  let acfts = Aircraft.acft_lst in
-
-  Plot.output_routes acfts;
-  Plot.output_obstacle;
-
-  while is_stop Const.dim !flag_fin do
-    let constraints = Array.init dim (fun i -> []) in
-    for i = 0 to dim - 1 do
-      if (List.nth acfts i).active then (
-        get_constraints_entre_avions i acfts constraints;
-        get_constraints_obstacle i acfts constraints)
-    done;
-
-    let boites = Array.init dim (fun i -> []) in
-    for i = 0 to dim - 1 do
-      let targetbox =
-        get_available_speed_box (List.nth acfts i).speed constraints.(i)
-      in
-
-      let new_speed =
-        if List.length targetbox == 1 && List.nth targetbox 0 == Geom.default_t
-        then Geom.default_t
-        else
-          get_available_speed (List.nth acfts i).speed
-            (List.nth acfts i).speedopt targetbox
-      in
-      (List.nth acfts i).speed <- new_speed;
-      if new_speed == Geom.default_t then (List.nth acfts i).level <- 1;
-      boites.(i) <- targetbox
-    done;
-    if !time mod step = 0 then (
-      Plot.output acfts boites !time;
-      flush Plot.outc);
-    move_all Const.dim acfts flag_fin;
-    Printf.printf "\027[32m time: %d \027[0m \n" !time;
-    Printf.printf "\027[32m flag_fin: %d \027[0m \n" !flag_fin;
-    incr time;
-    if !time > 5000 then exit 1
-  done;
-  let _ = Unix.select [] [] [] 10. in
-  flush Plot.outc
