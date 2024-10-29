@@ -10,7 +10,7 @@ INCLUDES = -I .
 LIBS_OPAM = -package unix
 #LIBS_OPT = $(LIBS_USR:.cma=.cmxa)
 #LIBS_BIN = $(LIBS_USR)
-SCML = const.ml geom.ml env.ml aircraft.ml plot.ml flyWithVectical.ml main.ml
+SCML = const.ml geom.ml env.ml aircraft.ml plot.ml flyWithVectical.ml constraintsOfOneAcft.ml main.ml
 SCCMO = $(SCML:.ml=.cmo)
 SCCMX = $(SCML:.ml=.cmx)
 all: opt
