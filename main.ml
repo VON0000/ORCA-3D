@@ -1,5 +1,5 @@
 open FlyWithVectical
-open ConstraintsOfOneAcft
+open ConstraintsOfOneLevel
 
 let () =
   let flag_fin = ref 0 in
@@ -14,8 +14,8 @@ let () =
     let constraints = Array.init Const.dim (fun i -> []) in
     for i = 0 to Const.dim - 1 do
       if (List.nth acfts i).active then (
-        get_constraints_entre_avions i acfts constraints;
-        get_constraints_obstacle i acfts constraints)
+        get_constraints_entre_avions i acfts constraints 60.;
+        get_constraints_obstacle i acfts constraints 60.)
     done;
 
     let boites = Array.init Const.dim (fun i -> []) in

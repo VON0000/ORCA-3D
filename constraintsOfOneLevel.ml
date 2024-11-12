@@ -35,7 +35,7 @@ let get_smallest_change_to_edge_for_non_sectoral_area relative_speed
     Geom.resize_2d direction_smallest_change (1. /. abs_norm_smallest_change) )
 
 let get_smallest_change_to_edge_for_sectoral_area relative_speed
-    centre_of_small_circle =
+    centre_of_small_circle tau =
   let vecteur_de_centre_of_small_circle_a_relative_speed =
     Geom.diff_2d relative_speed centre_of_small_circle
   in
@@ -43,7 +43,7 @@ let get_smallest_change_to_edge_for_sectoral_area relative_speed
     Geom.norm_2d vecteur_de_centre_of_small_circle_a_relative_speed
   in
   let distance_to_edge =
-    (2. *. Const.norme /. Const.tau)
+    (2. *. Const.norme /. tau)
     -. norm_vecteur_de_centre_of_small_circle_a_relative_speed
   in
   let direction_smallest_change =
@@ -56,7 +56,7 @@ let get_smallest_change_to_edge_for_sectoral_area relative_speed
     (direction_smallest_change, direction_smallest_change)
   else (direction_smallest_change, Geom.opp_2d direction_smallest_change)
 
-let get_smallest_change_to_edge local_acft ref_acft =
+let get_smallest_change_to_edge local_acft ref_acft tau =
   (* local_acft to ref_acft *)
   let centre_of_large_circle =
     Geom.diff_2d ref_acft.position local_acft.position
@@ -64,9 +64,7 @@ let get_smallest_change_to_edge local_acft ref_acft =
   let norm_centre_of_large_circle = Geom.norm_2d centre_of_large_circle
   and angle_centre_of_large_circle = Geom.angle_2d centre_of_large_circle in
 
-  let centre_of_small_circle =
-    Geom.resize_2d centre_of_large_circle Const.tau
-  in
+  let centre_of_small_circle = Geom.resize_2d centre_of_large_circle tau in
   let norm_centre_of_small_circle = Geom.norm_2d centre_of_small_circle in
 
   let relative_speed = Geom.diff_2d local_acft.speed ref_acft.speed in
@@ -124,14 +122,14 @@ let get_smallest_change_to_edge local_acft ref_acft =
     else
       Some
         (get_smallest_change_to_edge_for_sectoral_area relative_speed
-           centre_of_small_circle)
+           centre_of_small_circle tau)
 
-let get_constraints_entre_avions i acfts constraints =
+let get_constraints_entre_avions i acfts constraints tau =
   let local_acft = List.nth acfts i in
   for j = 0 to i - 1 do
     let ref_acft = List.nth acfts j in
     if ref_acft.active && ref_acft.level == local_acft.level then
-      match get_smallest_change_to_edge local_acft ref_acft with
+      match get_smallest_change_to_edge local_acft ref_acft tau with
       | Some (vecteur_to_edge, positive_direction_of_vecteur) ->
           if Geom.scal_2d vecteur_to_edge vecteur_to_edge > Const.epsilon then (
             constraints.(i) <-
@@ -180,20 +178,20 @@ let get_delta_speed previ local_acft d g =
   then (delta_v_droite, angle_ext_d)
   else (delta_v_gauche, angle_ext_g)
 
-let get_constraints_obstacle i acfts constraints =
+let get_constraints_obstacle i acfts constraints tau =
   let local_acft = List.nth acfts i in
   let previ_opt_tau =
     Geom.create_t
-      (local_acft.position.x +. (Const.tau *. local_acft.speedopt.x))
-      (local_acft.position.y +. (Const.tau *. local_acft.speedopt.y))
+      (local_acft.position.x +. (tau *. local_acft.speedopt.x))
+      (local_acft.position.y +. (tau *. local_acft.speedopt.y))
   and previ =
     Geom.create_t
       (local_acft.position.x +. (Const.pas *. local_acft.speed.x))
       (local_acft.position.y +. (Const.pas *. local_acft.speed.y))
   and previ_tau =
     Geom.create_t
-      (local_acft.position.x +. (Const.tau *. local_acft.speed.x))
-      (local_acft.position.y +. (Const.tau *. local_acft.speed.y))
+      (local_acft.position.x +. (tau *. local_acft.speed.x))
+      (local_acft.position.y +. (tau *. local_acft.speed.y))
   in
   for j = 0 to Array.length Env.obstacle - 1 do
     if

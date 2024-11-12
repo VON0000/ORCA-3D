@@ -87,5 +87,4 @@ let get_pas () =
 
 (* let pas = get_pas () *)
 let pas = 1.
-let tau = 60. (*horizon en secondes*)
 let epsilon = 0.0
