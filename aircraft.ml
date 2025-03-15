@@ -68,13 +68,22 @@ let def_dest id exist_acft =
   in
   generate_dest ()
 
+let get_random_speed (speed_range) =
+  (* 生成 [min_speed, max_speed] 之间的随机浮点数 *)
+  let (min_speed, max_speed) = speed_range in
+  let rand_speed = min_speed +. Random.float (max_speed -. min_speed) in
+  rand_speed
+
+(* 初始化随机种子 *)
+let () = Random.self_init ()
+
 let def_speed (position : Geom.t) (dest : Geom.t) =
   let angle = Geom.heading_angle position dest in
-  Geom.create_t (Const.const_speed *. cos angle) (Const.const_speed *. sin angle)
+  Geom.create_t (get_random_speed(Const.speed_range) *. cos angle) (get_random_speed(Const.speed_range) *. sin angle)
 
 let def_speedopt position dest =
   let cap = Geom.heading_angle position dest in
-  Geom.create_t (Const.const_speed *. cos cap) (Const.const_speed *. sin cap)
+  Geom.create_t (get_random_speed(Const.speed_range) *. cos cap) (get_random_speed(Const.speed_range) *. sin cap)
 
 let create id (exist_acft : t list ref) =
   let position = def_position id exist_acft in
@@ -96,7 +105,7 @@ let create id (exist_acft : t list ref) =
 
 let update_speedopt acft =
   let cap = Geom.heading_angle acft.position acft.dest in
-  Geom.create_t (Const.const_speed *. cos cap) (Const.const_speed *. sin cap)
+  Geom.create_t (Geom.norm_2d(acft.speed) *. cos cap) (Geom.norm_2d(acft.speed) *. sin cap)
 
 let get_position acft = acft.position
 let get_dest acft = acft.dest

@@ -72,7 +72,7 @@ let get_available_speed speed speedopt speedbox =
     if Geom.is_inside speedopt speedbox then speedopt
     else Geom.projection_point_to_convex speedopt speedbox
   in
-  if Geom.norm_2d newspeed > Const.const_speed /. 5. then newspeed
+  if Geom.norm_2d newspeed > Const.min_speed /. 5. then newspeed
   else if Geom.is_inside speed speedbox then speed
   else Geom.projection_point_to_convex (Geom.resize_2d speed 1.) speedbox
 

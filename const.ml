@@ -54,23 +54,34 @@ let get_dim () =
 let dim = get_dim ()
 (* let dim = 10 *)
 
-let get_speed () =
+let get_speed_range () =
   (* 打印提示信息 *)
-  Printf.printf "input the speed of drones: ";
-  (* 刷新输出缓冲区，确保提示信息立即显示 *)
-  flush stdout;
-  (* 获取用户输入并解析为整数 *)
+  Printf.printf "Input the range of the drones' speed: (as: a, b)\n";
+  flush stdout; (* 确保提示信息立即显示 *)
+
+  (* 获取用户输入并解析 *)
   try
-    let speed = read_float () in
-    Printf.printf "the speed of drones is: %f\n" speed;
-    speed
+    let input = read_line () in
+    match String.split_on_char ',' input with
+    | [a; b] ->
+        let speed_a = float_of_string (String.trim a) in
+        let speed_b = float_of_string (String.trim b) in
+        Printf.printf "The speed range of drones is: %f - %f\n" speed_a speed_b;
+        (speed_a, speed_b)
+    | _ -> 
+        Printf.printf "Invalid input format. Please enter in format: a, b\n";
+        exit 1
   with Failure _ ->
-    Printf.printf "invalid input of the speed of drones\n";
+    Printf.printf "Invalid input of the speed of drones\n";
     exit 1
 
-let const_speed = get_speed ()
-(* let const_speed = 1. *)
+(* 获取速度范围 *)
+let speed_range = get_speed_range ()
 
+
+let (min_speed, max_speed) = speed_range
+
+(* 获取时间步长 *)
 let get_pas () =
   (* 打印提示信息 *)
   Printf.printf "input the time step: ";
