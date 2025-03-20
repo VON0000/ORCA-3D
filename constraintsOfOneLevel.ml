@@ -34,6 +34,7 @@ let get_smallest_change_to_edge_for_non_sectoral_area relative_speed
   ( Geom.resize_2d direction_smallest_change (1. /. norm_smallest_change),
     Geom.resize_2d direction_smallest_change (1. /. abs_norm_smallest_change) )
 
+(* 得到结果为相对速度指向圆圈边界的向量 的 长度的1/2 和 方向 *)
 let get_smallest_change_to_edge_for_sectoral_area relative_speed
     centre_of_small_circle tau =
   let vecteur_de_centre_of_small_circle_a_relative_speed =
@@ -56,73 +57,90 @@ let get_smallest_change_to_edge_for_sectoral_area relative_speed
     (direction_smallest_change, direction_smallest_change)
   else (direction_smallest_change, Geom.opp_2d direction_smallest_change)
 
-let get_smallest_change_to_edge local_acft ref_acft tau =
-  (* local_acft to ref_acft *)
-  let centre_of_large_circle =
-    Geom.diff_2d ref_acft.position local_acft.position
+let compute_circle_centers ref_pos local_pos tau =
+  let large_center = Geom.diff_2d ref_pos local_pos in
+  let small_center = Geom.resize_2d large_center tau in
+  ( large_center,
+    Geom.norm_2d large_center,
+    Geom.angle_2d large_center,
+    small_center,
+    Geom.norm_2d small_center )
+
+let compute_edge_angles large_norm center_angle =
+  let half_angle_between_two_edge = asin (2. *. Const.norme /. large_norm) in
+  let right_edge_angle = center_angle -. half_angle_between_two_edge in
+  let left_edge_angle = center_angle +. half_angle_between_two_edge in
+  (right_edge_angle, left_edge_angle)
+
+let compute_projection_points small_norm half_angle_between_two_edge
+    right_edge_angle left_edge_angle =
+  let cos_half = cos half_angle_between_two_edge in
+  (* 小圆中心到右边界的投影点 *)
+  let proj_right =
+    Geom.create_t
+      (small_norm *. cos_half *. cos right_edge_angle)
+      (small_norm *. cos_half *. sin right_edge_angle)
+  (* 小圆中心到左边界的投影点 *)
+  and proj_left =
+    Geom.create_t
+      (small_norm *. cos_half *. cos left_edge_angle)
+      (small_norm *. cos_half *. sin left_edge_angle)
   in
-  let norm_centre_of_large_circle = Geom.norm_2d centre_of_large_circle
-  and angle_centre_of_large_circle = Geom.angle_2d centre_of_large_circle in
+  (proj_right, proj_left)
 
-  let centre_of_small_circle = Geom.resize_2d centre_of_large_circle tau in
-  let norm_centre_of_small_circle = Geom.norm_2d centre_of_small_circle in
+let get_smallest_change_to_edge local_acft ref_acft tau =
+  let { position = local_pos; speed = local_speed } = local_acft in
+  let { position = ref_pos; speed = ref_speed } = ref_acft in
+  let large_center, large_norm, center_angle, small_center, small_norm =
+    compute_circle_centers ref_pos local_pos tau
+  in
+  let relative_speed = Geom.diff_2d local_speed ref_speed in
 
-  let relative_speed = Geom.diff_2d local_acft.speed ref_acft.speed in
-
-  if norm_centre_of_large_circle < 2. *. Const.norme then failwith "npr<2*norme"
+  if large_norm < 2. *. Const.norme then failwith "Distance too small"
   else
-    let half_angle_between_two_edge =
-      asin (2. *. Const.norme /. norm_centre_of_large_circle)
+    let right_edge_angle, left_edge_angle =
+      compute_edge_angles large_norm center_angle
     in
-    let angle_edge_right =
-      angle_centre_of_large_circle -. half_angle_between_two_edge
-    and angle_edge_left =
-      angle_centre_of_large_circle +. half_angle_between_two_edge
-    in
-    let projecton_point_right =
-      Geom.create_t
-        (norm_centre_of_small_circle
-        *. cos half_angle_between_two_edge
-        *. cos angle_edge_right)
-        (norm_centre_of_small_circle
-        *. cos half_angle_between_two_edge
-        *. sin angle_edge_right)
-    and projecton_point_left =
-      Geom.create_t
-        (norm_centre_of_small_circle
-        *. cos half_angle_between_two_edge
-        *. cos angle_edge_left)
-        (norm_centre_of_small_circle
-        *. cos half_angle_between_two_edge
-        *. sin angle_edge_left)
+    let half_angle = asin (2. *. Const.norme /. large_norm) in
+    let proj_right, proj_left =
+      compute_projection_points small_norm half_angle right_edge_angle
+        left_edge_angle
     in
 
-    if
-      Geom.vectoriel_three_point_2d projecton_point_right centre_of_small_circle
-        relative_speed
-      > 0.
-      && Geom.vectoriel_three_point_2d centre_of_large_circle
-           centre_of_small_circle relative_speed
-         <= 0.
-    then
-      Some
-        (get_smallest_change_to_edge_for_non_sectoral_area relative_speed
-           angle_edge_right angle_edge_left true)
-    else if
-      Geom.vectoriel_three_point_2d centre_of_large_circle
-        centre_of_small_circle relative_speed
-      > 0.
-      && Geom.vectoriel_three_point_2d projecton_point_left
-           centre_of_small_circle relative_speed
-         <= 0.
-    then
-      Some
-        (get_smallest_change_to_edge_for_non_sectoral_area relative_speed
-           angle_edge_right angle_edge_left false)
-    else
-      Some
-        (get_smallest_change_to_edge_for_sectoral_area relative_speed
-           centre_of_small_circle tau)
+    (* > 0 relative_speed 在 proj_right small_center 连线的逆时针方向
+       < 0 relative_speed 在 proj_right small_center 连线的顺时针方向 *)
+    let vec_right =
+      Geom.vectoriel_three_point_2d proj_right small_center relative_speed
+    in
+    (* > 0 relative_speed 在 proj_left small_center 连线的逆时针方向
+       < 0 relative_speed 在 proj_left small_center 连线的顺时针方向 *)
+    let vec_left =
+      Geom.vectoriel_three_point_2d proj_left small_center relative_speed
+    in
+    (* > 0 relative_speed 在 large_center small_center 连线的逆时针方向
+       < 0 relative_speed 在 large_center small_center 连线的顺时针方向 *)
+    let vec_large_small =
+      Geom.vectoriel_three_point_2d large_center small_center relative_speed
+    in
+
+    match
+      ( vec_right > 0.,
+        vec_large_small <= 0.,
+        vec_large_small > 0.,
+        vec_left <= 0. )
+    with
+    | true, true, _, _ ->
+        Some
+          (get_smallest_change_to_edge_for_non_sectoral_area relative_speed
+             right_edge_angle left_edge_angle true)
+    | _, _, true, true ->
+        Some
+          (get_smallest_change_to_edge_for_non_sectoral_area relative_speed
+             right_edge_angle left_edge_angle false)
+    | _ ->
+        Some
+          (get_smallest_change_to_edge_for_sectoral_area relative_speed
+             small_center tau)
 
 let get_constraints_entre_avions i acfts constraints tau =
   let local_acft = List.nth acfts i in
@@ -131,7 +149,7 @@ let get_constraints_entre_avions i acfts constraints tau =
     if ref_acft.active && ref_acft.level == local_acft.level then
       match get_smallest_change_to_edge local_acft ref_acft tau with
       | Some (vecteur_to_edge, positive_direction_of_vecteur) ->
-          if Geom.scal_2d vecteur_to_edge vecteur_to_edge > Const.epsilon then (
+          if Geom.norm_2d vecteur_to_edge > Const.epsilon then (
             constraints.(i) <-
               (vecteur_to_edge, positive_direction_of_vecteur, true)
               :: constraints.(i);

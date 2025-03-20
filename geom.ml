@@ -23,10 +23,16 @@ let scal_2d (a : t) (b : t) = (a.x *. b.x) +. (a.y *. b.y)
 let vectoriel_2d (a : t) (b : t) = (a.x *. b.y) -. (a.y *. b.x)
 
 (* p0 -> p1 向量 和 p0 -> p2 向量 做内积 *)
+(* > 0 -> p0p1 p0p2 夹角小于90度
+   < 0 -> p0p1 p0p2 夹角大于90度
+   = 0 -> p0p1 p0p2 垂直 *)
 let scal_three_point_2d (p1 : t) (p0 : t) (p2 : t) =
   scal_2d (diff_2d p1 p0) (diff_2d p2 p0)
 
 (* p0 -> p1 向量 和 p0 -> p2 向量 做外积 *)
+(* > 0 -> p0p2 在 p0p1 的逆时针方向
+   < 0 -> p0p2 在 p0p1 的顺时针方向
+   = 0 -> 平行或者共线 *)
 let vectoriel_three_point_2d (p1 : t) (p0 : t) (p2 : t) =
   vectoriel_2d (diff_2d p1 p0) (diff_2d p2 p0)
 

@@ -18,6 +18,7 @@ let get_sep () =
 (* let sep = get_sep () *)
 let sep = 5.
 
+(* 安全距离（圆的半径） *)
 let get_norme () =
   (* 打印提示信息 *)
   Printf.printf "Entrez la demi norme de separation";
