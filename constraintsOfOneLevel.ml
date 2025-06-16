@@ -107,18 +107,18 @@ let get_smallest_change_to_edge local_acft ref_acft tau =
         left_edge_angle
     in
 
-    (* > 0 relative_speed 在 proj_right small_center 连线的逆时针方向
-       < 0 relative_speed 在 proj_right small_center 连线的顺时针方向 *)
+    (* > 0 relative_speed 在 small_center proj_right 连线的逆时针方向
+       < 0 relative_speed 在 small_center proj_right 连线的顺时针方向 *)
     let vec_right =
       Geom.vectoriel_three_point_2d proj_right small_center relative_speed
     in
-    (* > 0 relative_speed 在 proj_left small_center 连线的逆时针方向
-       < 0 relative_speed 在 proj_left small_center 连线的顺时针方向 *)
+    (* > 0 relative_speed 在 small_center proj_left 连线的逆时针方向
+       < 0 relative_speed 在 small_center proj_left 连线的顺时针方向 *)
     let vec_left =
       Geom.vectoriel_three_point_2d proj_left small_center relative_speed
     in
-    (* > 0 relative_speed 在 large_center small_center 连线的逆时针方向
-       < 0 relative_speed 在 large_center small_center 连线的顺时针方向 *)
+    (* > 0 relative_speed 在 small_center large_center 连线的逆时针方向
+       < 0 relative_speed 在 small_center large_center 连线的顺时针方向 *)
     let vec_large_small =
       Geom.vectoriel_three_point_2d large_center small_center relative_speed
     in
